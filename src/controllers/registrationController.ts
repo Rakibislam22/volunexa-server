@@ -4,6 +4,7 @@ import Event from "../models/Event.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { getIO } from "../socket/index.js";
 import { isDeadlinePassed } from "../utils/helpers.js";
+import { createAndSendNotification } from "./notificationController.js";
 
 // @desc    Register for an event
 // @route   POST /api/v1/registrations
@@ -71,6 +72,17 @@ export const registerForEvent = async (
           .to(`organizer:${event.organizer.toString()}`)
           .emit("registration:new", populatedReg);
 
+        // Persistent notification to organizer
+        await createAndSendNotification({
+          recipient: event.organizer,
+          sender: volunteerId,
+          title: "Volunteer Re-registered",
+          message: `${req.user?.name || "A volunteer"} re-registered for "${event.title}"`,
+          type: "success",
+          relatedEvent: event._id,
+          relatedRegistration: existingReg._id,
+        });
+
         res.status(200).json({ success: true, registration: populatedReg });
         return;
       }
@@ -109,6 +121,28 @@ export const registerForEvent = async (
     getIO().emit("event:updated", {
       _id: event._id,
       registeredCount: event.registeredCount,
+    });
+
+    // Persistent notification to organizer
+    await createAndSendNotification({
+      recipient: event.organizer,
+      sender: req.user?._id,
+      title: "Registration Cancelled",
+      message: `${req.user?.name || "A volunteer"} cancelled their registration for "${event.title}"`,
+      type: "warning",
+      relatedEvent: event._id,
+      relatedRegistration: registration._id,
+    });
+
+    // Persistent notification to organizer
+    await createAndSendNotification({
+      recipient: event.organizer,
+      sender: volunteerId,
+      title: "New Volunteer Registration",
+      message: `${req.user?.name || "A volunteer"} registered for "${event.title}"`,
+      type: "success",
+      relatedEvent: event._id,
+      relatedRegistration: registration._id,
     });
 
     res.status(201).json({ success: true, registration: populatedReg });
@@ -206,6 +240,17 @@ export const updateRegistrationStatus = async (
       availableSlots: event.maxCapacity - event.registeredCount,
     });
 
+    // Persistent notification to volunteer
+    await createAndSendNotification({
+      recipient: registration.volunteer,
+      sender: req.user?._id,
+      title: "Registration Status Updated",
+      message: `Your registration for "${event.title}" is now "${status}".`,
+      type: status === "confirmed" ? "success" : status === "cancelled" ? "warning" : "info",
+      relatedEvent: event._id,
+      relatedRegistration: registration._id,
+    });
+
     res.status(200).json({ success: true, registration: populatedReg });
   } catch (error: any) {
     res.status(500).json({ message: error.message || "Server error" });
@@ -295,6 +340,17 @@ export const cancelRegistration = async (
     getIO().emit("event:updated", {
       _id: event._id,
       registeredCount: event.registeredCount,
+    });
+
+    // Persistent notification to organizer
+    await createAndSendNotification({
+      recipient: event.organizer,
+      sender: req.user?._id,
+      title: "Registration Cancelled",
+      message: `${req.user?.name || "A volunteer"} cancelled their registration for "${event.title}"`,
+      type: "warning",
+      relatedEvent: event._id,
+      relatedRegistration: registration._id,
     });
 
     res.status(200).json({ success: true, message: "Registration cancelled" });

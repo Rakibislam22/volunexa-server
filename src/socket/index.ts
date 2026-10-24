@@ -41,6 +41,12 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
       console.log(`Socket ${socket.id} joined volunteer:${volunteerId}`);
     });
 
+    // Join generic user room for direct user notifications
+    socket.on("join:user", (userId: string) => {
+      socket.join(`user:${userId}`);
+      console.log(`Socket ${socket.id} joined user:${userId}`);
+    });
+
     socket.on("disconnect", () => {
       console.log(`Client disconnected: ${socket.id}`);
     });

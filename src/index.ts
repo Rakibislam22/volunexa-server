@@ -10,6 +10,7 @@ import registrationRoutes from "./routes/registrations.js";
 import analyticsRoutes from "./routes/analytics.js";
 import aiRoutes from "./routes/ai.js";
 import favoriteRoutes from "./routes/favorites.js";
+import notificationRoutes from "./routes/notifications.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -53,6 +54,7 @@ app.use("/api/v1/registrations", registrationRoutes);
 app.use("/api/v1/analytics", analyticsRoutes);
 app.use("/api/v1/ai", aiRoutes);
 app.use("/api/v1/favorites", favoriteRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
 
 // Connect to DB and start server
 const PORT = process.env.PORT || 5000;
