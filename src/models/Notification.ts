@@ -67,3 +67,4 @@ const Notification = mongoose.model<INotification>(
 );
 
 export default Notification;
+
