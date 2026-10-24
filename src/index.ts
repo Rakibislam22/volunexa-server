@@ -17,10 +17,24 @@ const httpServer = createServer(app);
 // Initialize Socket.IO
 const io = initializeSocket(httpServer);
 
+// Allowed origins
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  process.env.CLIENT_URL,
+].filter(Boolean) as string[];
+
 // Middleware
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    },
     credentials: true,
   })
 );

@@ -6,7 +6,10 @@ let io: Server;
 export const initializeSocket = (httpServer: HttpServer): Server => {
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL || "http://localhost:3000",
+      origin: (origin, callback) => {
+        // Allow localhost:3000, 127.0.0.1:3000, and configured CLIENT_URL
+        callback(null, true);
+      },
       methods: ["GET", "POST"],
       credentials: true,
     },
